@@ -1,6 +1,6 @@
 package user
 
-const TableName = "building"
+const TableName = "user"
 
 const Female = 0
 const Male = 1

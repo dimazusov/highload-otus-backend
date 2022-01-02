@@ -5,8 +5,16 @@ import (
 	"github.com/minipkg/selection_condition"
 )
 
+type Authentifier interface {
+	Check(token string) (bool, error)
+	Login(credentials Credentials) (token uint, err error)
+	Logout(token string) error
+	GetUserID(token string) (userID uint, err error)
+}
+
 type service struct {
-	rep   Repository
+	rep          Repository
+	authentifier Authentifier
 }
 
 type Service interface {

@@ -20,6 +20,42 @@ import (
 // @ID get-buildings
 // @Accept json
 // @Produce json
+// @Success 200 {object} UsersList
+// @Failure 400 {object} api_error.Error
+// @Failure 500 {object} api_error.Error
+// @Router /auth [get]
+func AuthHandler(c *gin.Context, app *app.App) {
+	// check login and pass
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": "asd",
+	})
+}
+
+
+// @Summary get buildings
+// @Description get buildings by params
+// @ID get-buildings
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface
+// @Failure 400 {object} api_error.Error
+// @Failure 500 {object} api_error.Error
+// @Router /registration [get]
+func RegisterHandler(c *gin.Context, app *app.App) {
+	// register user
+
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": "asd",
+	})
+}
+
+// @Summary get buildings
+// @Description get buildings by params
+// @ID get-buildings
+// @Accept json
+// @Produce json
 // @Param with_organization query boolean false "with organization"
 // @Param per_page query int false "per page"
 // @Param page query int false "page"

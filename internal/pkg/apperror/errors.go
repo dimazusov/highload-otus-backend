@@ -5,6 +5,5 @@ import (
 )
 
 var ErrNotFound = errors.New("Not found")
-var ErrBadRequest = errors.New("Bad request")
+var ErrTokenExpired = errors.New("Not found")
 var ErrInternal = errors.New("Internal error")
-var ErrEntityHasChilds = errors.New("Entity has childs")

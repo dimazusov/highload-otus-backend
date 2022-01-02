@@ -2,10 +2,9 @@ package http
 
 import (
 	"github.com/gin-gonic/gin"
-
-	"social/internal/server/http/middleware"
 	"social/internal/app"
 	"social/internal/server/http/handlers/user"
+	"social/internal/server/http/middleware"
 )
 
 // @title Swagger API
@@ -14,11 +13,10 @@ import (
 func NewGinRouter(app *app.App) *gin.Engine {
 	router := gin.Default()
 
-
 	v1Group := router.Group("/api/v1")
 
-	v1Group.GET("/auth", func(c *gin.Context) { user.GetRegisterHandler(c, app) })
-	v1Group.GET("/register", func(c *gin.Context) { user.GetRegisterHandler(c, app) })
+	v1Group.GET("/auth", func(c *gin.Context) { user.AuthHandler(c, app)})
+	v1Group.GET("/register", func(c *gin.Context) { user.RegisterHandler(c, app) })
 
 	auth := middleware.Auth(app)
 	v1Group.Use(auth).GET("/users", func(c *gin.Context) { user.GetUsersHandler(c, app) })
