@@ -1,27 +1,38 @@
 package jwt_token
 
 import (
-	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
+func TestParser_Create(t *testing.T) {
+	userID := uint(2312)
+	token, err := NewParser().Create(userID)
+	require.Nil(t, err)
+	require.Equal(t, userID, token.GetUserID())
+
+	expectedToken := "eyJhbGdvcml0aG0iOiJTSEEyNTYifQ==.eyJ1c2VySWQiOjIzMTJ9.OGE0NDA3NDg0MGQzNGU4Mzk5YzRhZGE0OWU2OGZlMTk="
+	givenToken, err := token.ToString()
+	require.Nil(t, err)
+	require.Equal(t, expectedToken, givenToken)
+}
+
 func TestParser_Parse(t *testing.T) {
-	token := "eyJ0eXBlIjoiSldUIiwiYWxnIjoiSFMyNTYifQ==.eyJpZCI6IjEzMzciLCJ1c2VybmFtZSI6ImJpem9uZSIsImlhdCI6MTU5NDIwOTYwMCwicm9sZSI6InVzZXIifQ==.YmUwZTFlNTRiZmRiY2FjYmFmOWM2NWE1ZjQzZGI5MjA"
+	expectedToken := "eyJhbGdvcml0aG0iOiJTSEEyNTYifQ==.eyJ1c2VySWQiOjIzMTJ9.OGE0NDA3NDg0MGQzNGU4Mzk5YzRhZGE0OWU2OGZlMTk="
 
 	p := NewParser()
-	jwtToken, err := p.Parse(token)
-	// require.Nil(t, err)
-	log.Println(err)
-
-	log.Println(jwtToken)
+	token, err := p.Parse(expectedToken)
+	require.Nil(t, err)
+	log.Println(token.GetUserID())
 }
 
 func TestParser_getSignature(t *testing.T) {
 	header := `{"typ": "JWT","alg": "HS256"}`
 	payload := `{"id": "1337","username": "bizone","iat": 1594209600,"role":"user"}`
 
-	givenSignature := NewParser().getSignature(header, payload)
+	givenSignature := getSignature(header, payload)
 	expectedSignature := "c9a3593c5767444815bc460e117a90ae"
 
 	require.Equal(t, expectedSignature, givenSignature)

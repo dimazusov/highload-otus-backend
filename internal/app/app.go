@@ -11,18 +11,11 @@ import (
 
 	"social/internal/cache"
 	"social/internal/config"
-	"social/internal/domain/authToken"
 	"social/internal/domain/user"
 )
 
 type Domain struct {
 	User      DomainUser
-	AuthToken DomainAuthToken
-}
-
-type DomainAuthToken struct {
-	Repository authToken.Repository
-	Service    authToken.Service
 }
 
 type DomainUser struct {

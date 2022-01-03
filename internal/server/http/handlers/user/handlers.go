@@ -25,13 +25,28 @@ import (
 // @Failure 500 {object} api_error.Error
 // @Router /auth [get]
 func AuthHandler(c *gin.Context, app *app.App) {
-	// check login and pass
+	credentials := user.Credentials{}
+	err := c.ShouldBindJSON(&credentials)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	token, err := app.Domain.User.Service.Auth(context.Background(), credentials)
+	if err != nil {
+		if err == apperror.ErrUserNotFound {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"token": "asd",
+		"token": token,
 	})
 }
-
 
 // @Summary get buildings
 // @Description get buildings by params
@@ -43,11 +58,34 @@ func AuthHandler(c *gin.Context, app *app.App) {
 // @Failure 500 {object} api_error.Error
 // @Router /registration [get]
 func RegisterHandler(c *gin.Context, app *app.App) {
-	// register user
+	regUser := user.User{}
+	err := c.ShouldBindJSON(&regUser)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
+	userID, err := app.Domain.User.Service.Create(context.Background(), &regUser)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	credentials := user.Credentials{
+		Email: regUser.Email,
+		Password: regUser.Password,
+	}
+	authToken, err := app.Domain.User.Service.Auth(context.Background(), credentials)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"token": "asd",
+		"token": authToken,
+		"userId": userID,
 	})
 }
 

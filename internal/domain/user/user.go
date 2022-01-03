@@ -7,6 +7,8 @@ const Male = 1
 
 type User struct {
 	ID       uint   `json:"id" db:"id" gorm:"primary_key"`
+	Password string `json:"password" db:"password"`
+	Email    string `json:"email" db:"email"`
 	Name     string `json:"name" db:"name"`
 	Age      uint   `json:"age" db:"age"`
 	Sex      bool   `json:"sex" db:"sex"`

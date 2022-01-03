@@ -8,13 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type hasher struct{}
-
-func New() *hasher {
-	return &hasher{}
-}
-
-func (m hasher) GetHashFromStruct(o interface{}) (hash string, err error) {
+func GetHashFromStruct(o interface{}) (hash string, err error) {
 	hs := sha256.New()
 
 	err = gob.NewEncoder(hs).Encode(o)

@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+const algorithm = "SHA256"
 const salt = "fawcoehfoiwefksdnfkbdksf"
 
 type parser struct{}
@@ -20,8 +21,33 @@ func NewParser() *parser {
 	return &parser{}
 }
 
-func (m parser) Create(token string) (*jwtToken, error) {
+func (m parser) Create(userID uint) (*jwtToken, error) {
+	header := make(map[string]string)
+	header["algorithm"] = algorithm
 
+	payload := make(map[string]interface{})
+	payload["userId"] = userID
+
+	jsonHeader, err := json.Marshal(header)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	encodedHeader := base64.StdEncoding.EncodeToString(jsonHeader)
+	encodedPayload := base64.StdEncoding.EncodeToString(jsonPayload)
+
+	signature := getSignature(encodedHeader, encodedPayload)
+
+	return &jwtToken{
+		header: header,
+		payload: payload,
+		signature: signature,
+	}, nil
 }
 
 func (m parser) Parse(token string) (*jwtToken, error) {
@@ -52,7 +78,7 @@ func (m parser) Parse(token string) (*jwtToken, error) {
 		return nil, err
 	}
 
-	expectedSignature := m.getSignature(parts[0], parts[1])
+	expectedSignature := getSignature(parts[0], parts[1])
 	givenSignature, err := base64.StdEncoding.DecodeString(parts[2])
 	if err != nil {
 		return nil, err
@@ -69,7 +95,7 @@ func (m parser) Parse(token string) (*jwtToken, error) {
 	}, nil
 }
 
-func (m parser) getSignature(encodedHeader string, encodedPayload string) (hash string) {
+func getSignature(encodedHeader string, encodedPayload string) (hash string) {
 	sum := sha256.Sum256([]byte(fmt.Sprintf("%s.%s%s", encodedHeader, encodedPayload, salt)))
 	return fmt.Sprintf("%x", sum)[:32]
 }

@@ -3,6 +3,9 @@ package user
 import (
 	"context"
 	"github.com/minipkg/selection_condition"
+	"social/internal/pkg/apperror"
+	"social/internal/pkg/hasher"
+	"social/internal/pkg/jwt_token"
 )
 
 type Authentifier interface {
@@ -25,6 +28,8 @@ type Service interface {
 	Update(ctx context.Context, b *User) error
 	Delete(ctx context.Context, id uint) error
 	Count(ctx context.Context, cond *selection_condition.SelectionCondition) (uint, error)
+	Auth(ctx context.Context, credentials Credentials) (token string, err error)
+	Logout(ctx context.Context, token string) (err error)
 }
 
 func NewService(rep Repository) Service {
@@ -69,4 +74,33 @@ func (m service) Delete(ctx context.Context, id uint) error {
 
 func (m service) Count(ctx context.Context, cond *selection_condition.SelectionCondition) (uint, error) {
 	return m.rep.Count(ctx, cond)
+}
+
+func (m service) Auth(ctx context.Context, credentials Credentials) (token string, err error) {
+	passHash, err := hasher.GetHashFromStruct(credentials.Password)
+	if err != nil {
+		return "", err
+	}
+
+	user, err := m.rep.First(ctx, &User{Email: credentials.Email, Password: passHash})
+	if err != nil {
+		return "", apperror.ErrUserNotFound
+	}
+
+	p := jwt_token.NewParser()
+	jwtToken, err := p.Create(user.ID)
+	if err != nil {
+		return "", err
+	}
+
+	token, err = jwtToken.ToString()
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func (m service) Logout(ctx context.Context, token string) error {
+	return nil
 }
