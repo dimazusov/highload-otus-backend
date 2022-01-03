@@ -15,12 +15,12 @@ import (
 	"social/internal/server/http/api_error"
 )
 
-// @Summary get buildings
-// @Description get buildings by params
-// @ID get-buildings
+// @Summary auth user
+// @Description auth user
+// @ID auth-user
 // @Accept json
 // @Produce json
-// @Success 200 {object} UsersList
+// @Success 200 {object} map[string]
 // @Failure 400 {object} api_error.Error
 // @Failure 500 {object} api_error.Error
 // @Router /auth [get]
@@ -48,9 +48,9 @@ func AuthHandler(c *gin.Context, app *app.App) {
 	})
 }
 
-// @Summary get buildings
-// @Description get buildings by params
-// @ID get-buildings
+// @Summary get users
+// @Description get usersby params
+// @ID get-users
 // @Accept json
 // @Produce json
 // @Success 200 {object} map[string]interface
@@ -89,9 +89,9 @@ func RegisterHandler(c *gin.Context, app *app.App) {
 	})
 }
 
-// @Summary get buildings
-// @Description get buildings by params
-// @ID get-buildings
+// @Summary get users
+// @Description get usersby params
+// @ID get-users
 // @Accept json
 // @Produce json
 // @Param with_organization query boolean false "with organization"
@@ -130,9 +130,9 @@ func GetUsersHandler(c *gin.Context, app *app.App) {
 	})
 }
 
-// @Summary get building by id
-// @Description get building by id
-// @ID get-building-by-id
+// @Summary get user by id
+// @Description get user by id
+// @ID get-user-by-id
 // @Accept json
 // @Produce json
 // @Param id path boolean true "id"
@@ -141,13 +141,13 @@ func GetUsersHandler(c *gin.Context, app *app.App) {
 // @Failure 500 {object} api_error.Error
 // @Router /user/{id} [get]
 func GetUserHandler(c *gin.Context, app *app.App) {
-	buildingID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	userID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, api_error.New(err))
 		return
 	}
 
-	bld, err := app.Domain.User.Service.Get(context.Background(), uint(buildingID))
+	bld, err := app.Domain.User.Service.Get(context.Background(), uint(userID))
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, api_error.New(apperror.ErrInternal))
@@ -157,12 +157,12 @@ func GetUserHandler(c *gin.Context, app *app.App) {
 	c.JSON(http.StatusOK, bld)
 }
 
-// @Summary update building
-// @Description update building
-// @ID update-building
+// @Summary update user
+// @Description update user
+// @ID update-user
 // @Accept json
 // @Produce json
-// @Param building body user.User true "updatable building"
+// @Param user body user.User true "updatable user"
 // @Success 200 {string} success
 // @Failure 400 {object} api_error.Error
 // @Failure 500 {object} api_error.Error
@@ -184,12 +184,12 @@ func UpdateUserHandler(c *gin.Context, app *app.App) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
-// @Summary create building
-// @Description create building
-// @ID create-building
+// @Summary create user
+// @Description create user
+// @ID create-user
 // @Accept json
 // @Produce json
-// @Param building body user.User true "creatable building"
+// @Param user body user.User true "creatable user"
 // @Success 200 {object} User
 // @Failure 400 {object} api_error.Error
 // @Failure 500 {object} api_error.Error
@@ -201,20 +201,20 @@ func CreateUserHandler(c *gin.Context, app *app.App) {
 		return
 	}
 
-	buildingID, err := app.Domain.User.Service.Create(context.Background(), &bdg)
+	userID, err := app.Domain.User.Service.Create(context.Background(), &bdg)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": apperror.ErrInternal.Error()})
 		return
 	}
-	bdg.ID = buildingID
+	bdg.ID = userID
 
 	c.JSON(http.StatusOK, bdg)
 }
 
-// @Summary delete building by id
-// @Description delete building by id
-// @ID delete-building-by-id
+// @Summary delete user by id
+// @Description delete user by id
+// @ID delete-user-by-id
 // @Accept json
 // @Produce json
 // @Param id path boolean true "id"
@@ -223,13 +223,13 @@ func CreateUserHandler(c *gin.Context, app *app.App) {
 // @Failure 500 {object} api_error.Error
 // @Router /user/{id} [delete]
 func DeleteUserHandler(c *gin.Context, app *app.App) {
-	buildingId, err := selection_condition.ParseUintParam(c.Param("id"))
+	userId, err := selection_condition.ParseUintParam(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = app.Domain.User.Service.Delete(context.Background(), buildingId)
+	err = app.Domain.User.Service.Delete(context.Background(), userId)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": apperror.ErrInternal.Error()})
