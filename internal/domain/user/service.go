@@ -2,8 +2,13 @@ package user
 
 import (
 	"context"
+
 	"github.com/minipkg/selection_condition"
+
+	"social/internal/pkg/hasher"
 )
+
+const salt = "safadsgasdg"
 
 type Authentifier interface {
 	Check(token string) (bool, error)
@@ -40,6 +45,12 @@ func (m service) Get(ctx context.Context, id uint) (b *User, err error) {
 }
 
 func (m service) First(ctx context.Context, cond *User) (b *User, err error) {
+	hashedPass, err := m.getPassHash(cond.Password)
+	if err != nil {
+		return nil, err
+	}
+	cond.Password = hashedPass
+
 	if b, err = m.rep.Get(ctx, cond.ID); err != nil {
 		return nil, err
 	}
@@ -55,12 +66,18 @@ func (m service) Query(ctx context.Context, cond *selection_condition.SelectionC
 	return Users, nil
 }
 
-func (m service) Create(ctx context.Context, b *User) (uint, error) {
-	return m.rep.Create(ctx, b)
+func (m service) Create(ctx context.Context, u *User) (uint, error) {
+	hashedPass, err := m.getPassHash(u.Password)
+	if err != nil {
+		return 0, err
+	}
+	u.Password = hashedPass
+
+	return m.rep.Create(ctx, u)
 }
 
-func (m service) Update(ctx context.Context, b *User) error {
-	return m.rep.Update(ctx, b)
+func (m service) Update(ctx context.Context, u *User) error {
+	return m.rep.Update(ctx, u)
 }
 
 func (m service) Delete(ctx context.Context, id uint) error {
@@ -69,4 +86,12 @@ func (m service) Delete(ctx context.Context, id uint) error {
 
 func (m service) Count(ctx context.Context, cond *selection_condition.SelectionCondition) (uint, error) {
 	return m.rep.Count(ctx, cond)
+}
+
+func (m service) getPassHash(password string) (hashedPass string, err error) {
+	hashedPass, err = hasher.New().GetHashFromStruct(hashedPass + salt)
+	if err != nil {
+		return "", err
+	}
+	return hashedPass, nil
 }

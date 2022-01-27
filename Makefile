@@ -11,7 +11,7 @@ lint: install-lint-deps
 	golangci-lint run ./...
 
 migrate:
-	docker-compose -f deployments/docker-compose.yaml exec app sh -c "/opt/social/migrations --config=/etc/social/config.yaml"
+	cd migrations && goose mysql "root:pass@/highload" up
 
 test-data:
 	docker-compose -f deployments/docker-compose.yaml exec app sh -c "/opt/social/testdatagen --config=/etc/social/config.yaml"

@@ -1,10 +1,11 @@
 package http
 
 import (
-	"github.com/gin-gonic/gin"
 	"social/internal/app"
 	"social/internal/server/http/handlers/user"
 	"social/internal/server/http/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
 // @title Swagger API
@@ -12,18 +13,21 @@ import (
 // @description social api
 func NewGinRouter(app *app.App) *gin.Engine {
 	router := gin.Default()
+	authMiddleware := middleware.Auth(app)
 
-	v1Group := router.Group("/api/v1")
+	frontendGroup := router.Group("/")
+	frontendGroup.GET("/")
 
-	v1Group.GET("/auth", func(c *gin.Context) { user.AuthHandler(c, app)})
-	v1Group.GET("/register", func(c *gin.Context) { user.RegisterHandler(c, app) })
+	apiGroup := router.Group("/api/v1")
 
-	auth := middleware.Auth(app)
-	v1Group.Use(auth).GET("/users", func(c *gin.Context) { user.GetUsersHandler(c, app) })
-	v1Group.Use(auth).GET("/user/:id", func(c *gin.Context) { user.GetUserHandler(c, app) })
-	v1Group.Use(auth).PUT("/user", func(c *gin.Context) { user.UpdateUserHandler(c, app) })
-	v1Group.Use(auth).POST("/user", func(c *gin.Context) { user.CreateUserHandler(c, app) })
-	v1Group.Use(auth).DELETE("/user/:id", func(c *gin.Context) { user.DeleteUserHandler(c, app) })
+	apiGroup.GET("/auth", func(c *gin.Context) { user.AuthHandler(c, app) })
+	apiGroup.GET("/register", func(c *gin.Context) { user.RegisterHandler(c, app) })
+
+	apiGroup.Use(authMiddleware).GET("/users", func(c *gin.Context) { user.GetUsersHandler(c, app) })
+	apiGroup.Use(authMiddleware).GET("/user/:id", func(c *gin.Context) { user.GetUserHandler(c, app) })
+	apiGroup.Use(authMiddleware).PUT("/user", func(c *gin.Context) { user.UpdateUserHandler(c, app) })
+	apiGroup.Use(authMiddleware).POST("/user", func(c *gin.Context) { user.CreateUserHandler(c, app) })
+	apiGroup.Use(authMiddleware).DELETE("/user/:id", func(c *gin.Context) { user.DeleteUserHandler(c, app) })
 
 	return router
 }

@@ -2,59 +2,56 @@ package auth_token
 
 import (
 	"context"
-	"crypto/sha1"
-	"encoding/base64"
-	"fmt"
-	"time"
-
 	"github.com/pkg/errors"
-
-	"social/internal/pkg/apperror"
+	"social/internal/pkg/unsecure_jwt_token"
 )
 
-type service struct {
-	rep   Repository
-}
+type service struct{}
+
+const userIDKey = "userId"
+
+var ErrWrongToken = errors.New("err wrong token")
+var ErrorUserIDNotExists = errors.New("userId not exists")
 
 type Service interface {
-	Get(ctx context.Context, token string) (c *AuthToken, err error)
-	Generate(ctx context.Context, userID uint) (c *AuthToken, err error)
+	Create(ctx context.Context, userID uint) (token string, err error)
+	Parse(ctx context.Context, token string) (userID uint, err error)
 }
 
-func NewService(rep Repository) Service {
-	return &service{
-		rep: rep,
-	}
+func NewService() Service {
+	return &service{}
 }
 
-func (m service) Get(ctx context.Context, token string) (authToken *AuthToken, err error) {
-	if authToken, err = m.rep.Get(ctx, token); err != nil {
-		return nil, err
-	}
+func (m service) Create(ctx context.Context, userID uint) (token string, err error) {
+	header := map[string]string{}
+	payload := map[string]interface{}{userIDKey: userID}
 
-	tm := time.Unix(int64(authToken.ExpiredAt), 0)
-	if tm.Before(time.Now()) {
-		return nil, apperror.ErrTokenExpired
-	}
-
-	return authToken, nil
-}
-
-func (m service) Generate(ctx context.Context, userID uint) (c *AuthToken, err error) {
-	hasher := sha1.New()
-	hasher.Write([]byte(fmt.Sprintf("%d%d", time.Now().Unix(), userID)))
-	hash := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
-
-	authToken := AuthToken{
-		Token:     hash,
-		UserId:    userID,
-		ExpiredAt: uint(time.Now().Unix()) + timeExpiredSeconds,
-	}
-
-	err = m.rep.Create(ctx, &authToken)
+	jwtToken, err := unsecure_jwt_token.Create(header, payload)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot save auth token")
+		return "", err
 	}
 
-	return &authToken, nil
+	strJwtToken, err := jwtToken.ToString()
+	if err != nil {
+		return "", err
+	}
+
+	return strJwtToken, nil
+}
+
+func (m service) Parse(ctx context.Context, token string) (userID uint, err error) {
+	jwtToken, err := unsecure_jwt_token.Parse(token)
+	if err != nil {
+		if errors.Is(err, unsecure_jwt_token.ErrWrongToken) {
+			return 0, ErrWrongToken
+		}
+		return 0, err
+	}
+
+	userIDPayload, ok := jwtToken.GetPayload()[userIDKey]
+	if !ok {
+		return 0, ErrorUserIDNotExists
+	}
+
+	return uint(userIDPayload.(float64)), nil
 }

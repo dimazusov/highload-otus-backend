@@ -2,12 +2,9 @@ package user
 
 import (
 	"context"
+	"database/sql"
 
-	minipkg_gorm "github.com/minipkg/db/gorm"
-	"github.com/minipkg/selection_condition"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"social/internal/pkg/apperror"
 )
@@ -15,92 +12,176 @@ import (
 type Repository interface {
 	Get(ctx context.Context, id uint) (c *User, err error)
 	First(ctx context.Context, cond *User) (c *User, err error)
-	Query(ctx context.Context, cond *selection_condition.SelectionCondition) (Users []User, err error)
+	Query(ctx context.Context, cond *User) (Users []User, err error)
 	Create(ctx context.Context, c *User) (uint, error)
 	Update(ctx context.Context, c *User) error
 	Delete(ctx context.Context, id uint) error
-	Count(ctx context.Context, cond *selection_condition.SelectionCondition) (uint, error)
+	Count(ctx context.Context, cond *User) (uint, error)
 }
 
 type repository struct {
-	db *gorm.DB
+	db *sql.DB
 }
 
-func NewRepository(db *gorm.DB) Repository {
+func NewRepository(db *sql.DB) Repository {
 	return &repository{db: db}
 }
 
-func (m repository) Get(ctx context.Context, id uint) (b *User, err error) {
-	b = &User{}
-	err = m.db.WithContext(ctx).First(b, id).Error
+func (m repository) Get(ctx context.Context, id uint) (u *User, err error) {
+	u = &User{}
+
+	query := "SELECT id, password, name, surname, age, sex, city, interest FROM users WHERE id = ?"
+
+	err = m.db.QueryRowContext(ctx, query, id).
+		Scan(&u.ID, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Age, &u.Sex, &u.City, &u.Interest)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apperror.ErrNotFound
 		}
 		return nil, errors.Wrap(err, "cannot get by id User")
 	}
-	return b, nil
+
+	return u, nil
 }
 
-func (m repository) First(ctx context.Context, cond *User) (b *User, err error) {
-	b = &User{}
-	err = m.db.WithContext(ctx).Where(cond).First(b).Error
+func (m repository) First(ctx context.Context, cond *User) (u *User, err error) {
+	params := []interface{}{}
+	query := "SELECT id, password, name, surname, age, sex, city, interest FROM users 1"
+	if cond.Password != "" {
+		query += " AND password = ?"
+		params = append(params, cond.Password)
+	}
+	if cond.Name != "" {
+		query += " AND name = ?"
+		params = append(params, cond.Name)
+	}
+	if cond.Surname != "" {
+		query += " AND surname = ?"
+		params = append(params, cond.Surname)
+	}
+	if cond.City != "" {
+		query += " AND city = ?"
+		params = append(params, cond.City)
+	}
+	if cond.Interest != "" {
+		query += " AND interest = ?"
+		params = append(params, cond.Interest)
+	}
+
+	u = &User{}
+	err = m.db.QueryRowContext(ctx, query, params...).
+		Scan(&u.ID, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Age, &u.Sex, &u.City, &u.Interest)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	return u, nil
+}
+
+func (m repository) Query(ctx context.Context, cond *User) (Users []User, err error) {
+	params := []interface{}{}
+	query := "SELECT id, password, name, surname, age, sex, city, interest FROM users 1"
+	if cond.Password != "" {
+		query += " AND password = ?"
+		params = append(params, cond.Password)
+	}
+	if cond.Name != "" {
+		query += " AND name = ?"
+		params = append(params, cond.Name)
+	}
+	if cond.Surname != "" {
+		query += " AND surname = ?"
+		params = append(params, cond.Surname)
+	}
+	if cond.City != "" {
+		query += " AND city = ?"
+		params = append(params, cond.City)
+	}
+	if cond.Interest != "" {
+		query += " AND interest = ?"
+		params = append(params, cond.Interest)
+	}
+
+	rows, err := m.db.QueryContext(ctx, query, params...)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apperror.ErrNotFound
 		}
-		return nil, errors.Wrap(err, "cannot get User")
+		return nil, err
 	}
-	return b, nil
+	defer rows.Close()
+
+	users := []User{}
+	for rows.Next() {
+		u := User{}
+		err = rows.Scan(&u.ID, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Age, &u.Sex, &u.City, &u.Interest)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return users, nil
 }
 
-func (m repository) Query(ctx context.Context, cond *selection_condition.SelectionCondition) (Users []User, err error) {
-	db := m.db.WithContext(ctx)
-	db = minipkg_gorm.Conditions(db, cond)
-
-	err = db.Find(&Users).Error
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot get Users")
-	}
-	return Users, nil
-}
-
-func (m repository) Create(ctx context.Context, c *User) (uint, error) {
-	err := m.db.WithContext(ctx).Create(c).Error
+func (m repository) Create(ctx context.Context, u *User) (uint, error) {
+	query := "INSERT INTO (password, name, surname, age, sex, city, interest) VALUES (?,?,?,?,?,?,?);"
+	res, err := m.db.ExecContext(ctx, query, u.Password, u.Name, u.Surname, u.Age, u.Sex, u.City, u.Interest)
 	if err != nil {
 		return 0, errors.Wrap(err, "cannot create User")
 	}
-	return c.ID, nil
+	userId, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return uint(userId), nil
 }
 
-func (m repository) Update(ctx context.Context, c *User) error {
-	err := m.db.WithContext(ctx).Save(c).Error
+func (m repository) Update(ctx context.Context, u *User) error {
+	query := "UPDATE users SET password=?, name=?, surname=?, age=?, sex=?, city=?, interest=? WHERE id =? VALUES (?,?,?,?,?,?,?,?);"
+	_, err := m.db.ExecContext(ctx, query, u.Password, u.Name, u.Surname, u.Age, u.Sex, u.City, u.Interest, u.ID)
 	if err != nil {
-		return errors.Wrap(err, "cannot update User")
+		return errors.Wrap(err, "cannot update user")
 	}
 	return nil
 }
 
 func (m repository) Delete(ctx context.Context, id uint) error {
-	b, err := m.Get(ctx, id)
+	query := "DELETE FROM users WHERE id = ?"
+	_, err := m.db.ExecContext(ctx, query, id)
 	if err != nil {
-		return err
-	}
-
-	err = m.db.WithContext(ctx).Model(b).Select(clause.Associations).Delete(b).Error
-	if err != nil {
-		return errors.Wrap(err, "cannot delete User")
+		return errors.Wrap(err, "cannot delete user")
 	}
 	return nil
 }
 
-func (m repository) Count(ctx context.Context, cond *selection_condition.SelectionCondition) (uint, error) {
-	db := minipkg_gorm.Conditions(m.db, cond)
+func (m repository) Count(ctx context.Context, cond *User) (uint, error) {
+	params := []interface{}{}
+	query := "SELECT count(*) FROM users 1"
+	if cond.Password != "" {
+		query += " AND password = ?"
+		params = append(params, cond.Password)
+	}
+	if cond.Name != "" {
+		query += " AND name = ?"
+		params = append(params, cond.Name)
+	}
+	if cond.Surname != "" {
+		query += " AND surname = ?"
+		params = append(params, cond.Surname)
+	}
+	if cond.City != "" {
+		query += " AND city = ?"
+		params = append(params, cond.City)
+	}
+	if cond.Interest != "" {
+		query += " AND interest = ?"
+		params = append(params, cond.Interest)
+	}
 
-	var count int64
-	err := db.WithContext(ctx).Model(&User{}).Count(&count).Error
+	count := 0
+	err := m.db.QueryRowContext(ctx, query, params...).Scan(&count)
 	if err != nil {
-		return 0, errors.Wrap(err, "cannot get count Users")
+		return 0, err
 	}
 
 	return uint(count), nil

@@ -26,13 +26,12 @@ type Config struct {
 		Level string `config:"level"`
 	} `config:"logger"`
 	DB struct {
-		Postgres struct {
-			Dialect string `config:"dialect"`
-			Dsn     string `config:"dsn"`
-		} `config:"postgres"`
-		Memory struct {
-			MaxSize uint `config:"maxsize"`
-		} `config:"memory"`
+		Mysql struct {
+			Dialect               string `config:"dialect"`
+			Dsn                   string `config:"dsn"`
+			MaxConnLifetimeMinute int    `config:"maxConnLifetimeMinute"`
+			MaxConn               int    `config:"maxConn"`
+		} `config:"msyql"`
 	} `config:"db"`
 	Repository struct {
 		Type string `config:"type"`

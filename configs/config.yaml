@@ -8,11 +8,11 @@ redis:
   password: ""
 
 db:
-  postgres:
-    dialect: "postgres"
-    dsn: "host=postgres port=5432 dbname=db user=db password=db sslmode=disable"
-  memory:
-    maxsize: 20
+  mysql:
+    dialect: "mysql"
+    dsn: "mysql://db:db@mysql:3306/highload?serverVersion=5"
+    maxConnLifetimeMinute: 3
+    maxConn: 10
 
 repository:
-  type: "postgres"
+  type: "mysql"

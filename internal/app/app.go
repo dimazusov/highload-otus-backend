@@ -2,16 +2,14 @@ package app
 
 import (
 	"context"
+	"database/sql"
+	"time"
 
 	"github.com/go-redis/redis/v8"
-	minipkg_gorm "github.com/minipkg/db/gorm"
 	"github.com/pkg/errors"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-
 	"social/internal/cache"
 	"social/internal/config"
-	"social/internal/domain/authToken"
+	"social/internal/domain/auth_token"
 	"social/internal/domain/user"
 )
 
@@ -21,8 +19,7 @@ type Domain struct {
 }
 
 type DomainAuthToken struct {
-	Repository authToken.Repository
-	Service    authToken.Service
+	Service auth_token.Service
 }
 
 type DomainUser struct {
@@ -32,7 +29,7 @@ type DomainUser struct {
 
 type App struct {
 	cfg    *config.Config
-	db     *minipkg_gorm.DB
+	db     *sql.DB
 	Cache  cache.Cache
 	Domain Domain
 }
@@ -41,15 +38,12 @@ func New(config *config.Config) *App {
 	return &App{cfg: config}
 }
 
-func (m *App) DB() *gorm.DB {
-	return m.db.DB()
+func (m *App) DB() *sql.DB {
+	return m.db
 }
 
 func (m *App) Init() error {
 	if err := m.initDB(); err != nil {
-		return err
-	}
-	if err := m.initSchemes(); err != nil {
 		return err
 	}
 	if err := m.initCache(); err != nil {
@@ -65,16 +59,18 @@ func (m *App) Init() error {
 	return nil
 }
 
-func (m *App) initDB() (err error) {
+func (m *App) initDB() error {
 	switch m.cfg.Repository.Type {
 	case "mysql":
-		conn, err := gorm.Open(postgres.Open(m.cfg.DB.Postgres.Dsn), &gorm.Config{})
+		db, err := sql.Open(m.cfg.DB.Mysql.Dialect, m.cfg.DB.Mysql.Dsn)
 		if err != nil {
-			return errors.Wrapf(err, "cannot connect to postgres")
+			return errors.Wrap(err, "cannot connect to db")
 		}
-		m.db = &minipkg_gorm.DB{GormDB: conn}
+		db.SetConnMaxLifetime(time.Minute * 3)
+		db.SetMaxOpenConns(m.cfg.DB.Mysql.MaxConn)
+		db.SetMaxIdleConns(m.cfg.DB.Mysql.MaxConn)
+		m.db = db
 	}
-
 	return nil
 }
 
@@ -93,16 +89,8 @@ func (m *App) initCache() (err error) {
 	return nil
 }
 
-func (m *App) initSchemes() (err error) {
-	if m.db, err = m.db.SchemeInit(&user.User{}); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (m *App) initRepositories() (err error) {
-	m.Domain.User.Repository = user.NewRepository(m.db.DB())
+	m.Domain.User.Repository = user.NewRepository(m.db)
 
 	return nil
 }

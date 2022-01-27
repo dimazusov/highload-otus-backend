@@ -1,11 +1,15 @@
 package middleware
 
 import (
+	"context"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 
 	"social/internal/app"
+	"social/internal/domain/auth_token"
 )
 
 func Auth(app *app.App) gin.HandlerFunc {
@@ -15,8 +19,14 @@ func Auth(app *app.App) gin.HandlerFunc {
 			c.JSON(http.StatusForbidden, gin.H{})
 			return
 		}
-		if !app.Domain.AuthToken.Service.CheckAuthToken(token) {
-			c.JSON(http.StatusForbidden, gin.H{})
+		_, err := app.Domain.AuthToken.Service.Parse(context.Background(), token.(string))
+		if err != nil {
+			if errors.Is(err, auth_token.ErrWrongToken) {
+				c.JSON(http.StatusForbidden, gin.H{})
+				return
+			}
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{})
 			return
 		}
 		c.Next()

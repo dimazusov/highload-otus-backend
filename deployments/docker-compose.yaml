@@ -1,20 +1,23 @@
 version: '3'
 services:
-  postgres:
+  mysql:
     ports:
-      - "5432:5432"
-    image: postgres
+      - "3306:3306"
+    image: mysql:5.7
     environment:
-      - POSTGRES_USER=db
-      - POSTGRES_PASSWORD=db
-      - POSTGRES_DB=db
+      MYSQL_ROOT_PASSWORD: "pass"
+      MYSQL_DATABASE: "highload"
+      MYSQL_USER: "db"
+      MYSQL_PASSWORD: "db"
+    volumes:
+      - /var/lib/mysql:/var/lib/mysql
   redis:
     image: redis
     ports:
       - "6379:6379"
   app:
     depends_on:
-      - postgres
+      - mysql
       - redis
     ports:
       - "8080:8080"
