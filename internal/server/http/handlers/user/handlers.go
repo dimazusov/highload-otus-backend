@@ -2,8 +2,10 @@ package user
 
 import (
 	"context"
+	"github.com/gin-gonic/gin/binding"
 	"log"
 	"net/http"
+	"social/internal/pkg/pagination"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -98,21 +100,29 @@ func RegisterHandler(c *gin.Context, app *app.App) {
 // @Failure 500 {object} api_error.Error
 // @Router /users [get]
 func GetUsersHandler(c *gin.Context, app *app.App) {
-	cond := selection_condition.SelectionCondition{}
-	err := c.ShouldBindQuery(&cond)
-	if err := c.ShouldBindQuery(&cond); err != nil {
+	user := user.User{}
+	if err := c.ShouldBindQuery(&user); err != nil {
 		c.JSON(http.StatusBadRequest, api_error.New(err))
 		return
 	}
 
-	users, err := app.Domain.User.Service.Query(context.Background(), &cond)
+	pag := pagination.Pagination{
+		PerPage: pagination.DefaultPerPage,
+		Page:    pagination.DefaultPage,
+	}
+	if err := c.ShouldBindWith(&pag, binding.Query); err == nil {
+		c.JSON(http.StatusBadRequest, api_error.New(err))
+		return
+	}
+
+	users, err := app.Domain.User.Service.Query(context.Background(), &user, &pag)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, api_error.New(apperror.ErrInternal))
 		return
 	}
 
-	count, err := app.Domain.User.Service.Count(context.Background(), &cond)
+	count, err := app.Domain.User.Service.Count(context.Background(), &user)
 	if err != nil {
 		log.Println(err)
 

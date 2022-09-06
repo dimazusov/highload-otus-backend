@@ -1,5 +1,8 @@
 package pagination
 
+const DefaultPageParam = "page"
+const DefaultPerPageParam = "per_page"
+
 const DefaultPage = 1
 const DefaultPerPage = 10
 

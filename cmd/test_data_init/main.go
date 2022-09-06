@@ -1,11 +1,11 @@
 package main
 
 import (
+	"flag"
+	"log"
 	"social/internal/app"
 	"social/internal/config"
 	"social/internal/test_data"
-	"flag"
-	"log"
 )
 
 var configFile string
@@ -27,7 +27,10 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	generator := test_data.NewGenerator(application.DB())
+	generator, err := test_data.NewGenerator(application.DB())
+	if err != nil {
+		log.Fatalln(err)
+	}
 	err = generator.GenerateTestData()
 	if err != nil {
 		log.Fatalln(err)

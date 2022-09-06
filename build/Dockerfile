@@ -1,7 +1,6 @@
 FROM golang:1.15.2 as build
 
 ENV SERVER_FILE /opt/social/social-app
-ENV MIGRATIONS_FILE /opt/social/migrations
 ENV TESTGEN_FILE /opt/social/testdatagen
 
 ENV CODE_DIR /go/src/
@@ -16,7 +15,6 @@ COPY . ${CODE_DIR}
 
 ARG LDFLAGS
 RUN CGO_ENABLED=0 go build -ldflags "$LDFLAGS" -o ${SERVER_FILE} cmd/social/main.go
-RUN CGO_ENABLED=0 go build -ldflags "$LDFLAGS" -o ${MIGRATIONS_FILE} cmd/migrations/main.go
 RUN CGO_ENABLED=0 go build -ldflags "$LDFLAGS" -o ${TESTGEN_FILE} cmd/test_data_init/main.go
 
 FROM alpine:3.9
@@ -26,11 +24,9 @@ LABEL SERVICE="social"
 LABEL MAINTAINERS="dimazusov@yandex.ru"
 
 ENV SERVER_FILE "/opt/social/social-app"
-ENV MIGRATIONS_FILE "/opt/social/migrations"
 ENV TESTGEN_FILE "/opt/social/testdatagen"
 
 COPY --from=build ${SERVER_FILE} ${SERVER_FILE}
-COPY --from=build ${MIGRATIONS_FILE} ${MIGRATIONS_FILE}
 COPY --from=build ${TESTGEN_FILE} ${TESTGEN_FILE}
 
 ENV CONFIG_FILE /etc/social/config.yaml

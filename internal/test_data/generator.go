@@ -1,6 +1,7 @@
 package test_data
 
 import (
+	"database/sql"
 	"log"
 	"math/rand"
 	"os"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/cheggaaa/pb/v3"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
@@ -23,11 +25,18 @@ type generator struct {
 	db *gorm.DB
 }
 
-func NewGenerator(db *gorm.DB) *generator {
+func NewGenerator(sqlDB *sql.DB) (*generator, error) {
+	db, err := gorm.Open(mysql.New(mysql.Config{
+		Conn: sqlDB,
+	}), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+
 	db.Logger = newLogger()
 	return &generator{
 		db: db,
-	}
+	}, nil
 }
 
 func newLogger() logger.Interface {
@@ -61,10 +70,10 @@ func (m generator) generateBuildings() error {
 		for j := 0; j < batchSize; j++ {
 			age := uint(rand.Intn(maxAge-minAge) + minAge)
 			users = append(users, user.User{
-				Name: gofakeit.Name(),
-				Age: age,
-				Sex: boolGen.Bool(),
-				City: gofakeit.City(),
+				Name:     gofakeit.Name(),
+				Age:      age,
+				Sex:      boolGen.Bool(),
+				City:     gofakeit.City(),
 				Interest: gofakeit.Phrase(),
 			})
 

@@ -3,6 +3,8 @@ package user
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"social/internal/pkg/pagination"
 
 	"github.com/pkg/errors"
 
@@ -12,7 +14,7 @@ import (
 type Repository interface {
 	Get(ctx context.Context, id uint) (c *User, err error)
 	First(ctx context.Context, cond *User) (c *User, err error)
-	Query(ctx context.Context, cond *User) (Users []User, err error)
+	Query(ctx context.Context, cond *User, pag *pagination.Pagination) (Users []User, err error)
 	Create(ctx context.Context, c *User) (uint, error)
 	Update(ctx context.Context, c *User) error
 	Delete(ctx context.Context, id uint) error
@@ -78,7 +80,7 @@ func (m repository) First(ctx context.Context, cond *User) (u *User, err error) 
 	return u, nil
 }
 
-func (m repository) Query(ctx context.Context, cond *User) (Users []User, err error) {
+func (m repository) Query(ctx context.Context, cond *User, pag *pagination.Pagination) (Users []User, err error) {
 	params := []interface{}{}
 	query := "SELECT id, password, name, surname, age, sex, city, interest FROM users 1"
 	if cond.Password != "" {
@@ -101,6 +103,9 @@ func (m repository) Query(ctx context.Context, cond *User) (Users []User, err er
 		query += " AND interest = ?"
 		params = append(params, cond.Interest)
 	}
+
+	query += fmt.Sprintf("OFFSET %d LIMIT %d", pag.GetOffset(), pag.GetLimit())
+	params = append(params, pag.GetOffset(), pag.GetLimit())
 
 	rows, err := m.db.QueryContext(ctx, query, params...)
 	if err != nil {
