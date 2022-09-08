@@ -50,7 +50,8 @@ func (m service) First(ctx context.Context, cond *User) (b *User, err error) {
 	}
 	cond.Password = hashedPass
 
-	if b, err = m.rep.Get(ctx, cond.ID); err != nil {
+	b, err = m.rep.Get(ctx, cond.ID)
+	if err != nil {
 		return nil, err
 	}
 

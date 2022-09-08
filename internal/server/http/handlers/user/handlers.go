@@ -35,6 +35,10 @@ func AuthHandler(c *gin.Context, app *app.App) {
 
 	u, err := app.Domain.User.Service.First(context.Background(), &cond)
 	if err != nil {
+		if err == apperror.ErrNotFound {
+			c.JSON(http.StatusBadRequest, gin.H{"error": apperror.ErrInternal.Error()})
+			return
+		}
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": apperror.ErrInternal.Error()})
 		return
