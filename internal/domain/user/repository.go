@@ -32,10 +32,10 @@ func NewRepository(db *sql.DB) Repository {
 func (m repository) Get(ctx context.Context, id uint) (u *User, err error) {
 	u = &User{}
 
-	query := "SELECT id, password, name, surname, age, sex, city, interest FROM users WHERE id = ?"
+	query := "SELECT id, email, password, name, surname, age, sex, city, interest FROM users WHERE id = ?"
 
 	err = m.db.QueryRowContext(ctx, query, id).
-		Scan(&u.ID, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Age, &u.Sex, &u.City, &u.Interest)
+		Scan(&u.ID, &u.Email, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Age, &u.Sex, &u.City, &u.Interest)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apperror.ErrNotFound
@@ -48,7 +48,11 @@ func (m repository) Get(ctx context.Context, id uint) (u *User, err error) {
 
 func (m repository) First(ctx context.Context, cond *User) (u *User, err error) {
 	params := []interface{}{}
-	query := "SELECT id, password, name, surname, age, sex, city, interest FROM users 1"
+	query := "SELECT id, email, password, name, surname, age, sex, city, interest FROM users 1"
+	if cond.Email != "" {
+		query += " AND email = ?"
+		params = append(params, cond.Email)
+	}
 	if cond.Password != "" {
 		query += " AND password = ?"
 		params = append(params, cond.Password)
@@ -72,7 +76,7 @@ func (m repository) First(ctx context.Context, cond *User) (u *User, err error) 
 
 	u = &User{}
 	err = m.db.QueryRowContext(ctx, query, params...).
-		Scan(&u.ID, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Age, &u.Sex, &u.City, &u.Interest)
+		Scan(&u.ID, &u.Email, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Age, &u.Sex, &u.City, &u.Interest)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +86,11 @@ func (m repository) First(ctx context.Context, cond *User) (u *User, err error) 
 
 func (m repository) Query(ctx context.Context, cond *User, pag *pagination.Pagination) (Users []User, err error) {
 	params := []interface{}{}
-	query := "SELECT id, password, name, surname, age, sex, city, interest FROM users 1"
+	query := "SELECT id, email, password, name, surname, age, sex, city, interest FROM users 1"
+	if cond.Email != "" {
+		query += " AND email = ?"
+		params = append(params, cond.Email)
+	}
 	if cond.Password != "" {
 		query += " AND password = ?"
 		params = append(params, cond.Password)
@@ -119,7 +127,7 @@ func (m repository) Query(ctx context.Context, cond *User, pag *pagination.Pagin
 	users := []User{}
 	for rows.Next() {
 		u := User{}
-		err = rows.Scan(&u.ID, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Age, &u.Sex, &u.City, &u.Interest)
+		err = rows.Scan(&u.ID, &u.Email, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Age, &u.Sex, &u.City, &u.Interest)
 		if err != nil {
 			return nil, err
 		}
@@ -129,8 +137,8 @@ func (m repository) Query(ctx context.Context, cond *User, pag *pagination.Pagin
 }
 
 func (m repository) Create(ctx context.Context, u *User) (uint, error) {
-	query := "INSERT INTO (password, name, surname, age, sex, city, interest) VALUES (?,?,?,?,?,?,?);"
-	res, err := m.db.ExecContext(ctx, query, u.Password, u.Name, u.Surname, u.Age, u.Sex, u.City, u.Interest)
+	query := "INSERT INTO (email, password, name, surname, age, sex, city, interest) VALUES (?,?,?,?,?,?,?,?);"
+	res, err := m.db.ExecContext(ctx, query, u.Email, u.Password, u.Name, u.Surname, u.Age, u.Sex, u.City, u.Interest)
 	if err != nil {
 		return 0, errors.Wrap(err, "cannot create User")
 	}
@@ -142,8 +150,8 @@ func (m repository) Create(ctx context.Context, u *User) (uint, error) {
 }
 
 func (m repository) Update(ctx context.Context, u *User) error {
-	query := "UPDATE users SET password=?, name=?, surname=?, age=?, sex=?, city=?, interest=? WHERE id =? VALUES (?,?,?,?,?,?,?,?);"
-	_, err := m.db.ExecContext(ctx, query, u.Password, u.Name, u.Surname, u.Age, u.Sex, u.City, u.Interest, u.ID)
+	query := "UPDATE users SET email=?,password=?, name=?, surname=?, age=?, sex=?, city=?, interest=? WHERE id =? VALUES (?,?,?,?,?,?,?,?,?);"
+	_, err := m.db.ExecContext(ctx, query, u.Email, u.Password, u.Name, u.Surname, u.Age, u.Sex, u.City, u.Interest, u.ID)
 	if err != nil {
 		return errors.Wrap(err, "cannot update user")
 	}
@@ -162,6 +170,10 @@ func (m repository) Delete(ctx context.Context, id uint) error {
 func (m repository) Count(ctx context.Context, cond *User) (uint, error) {
 	params := []interface{}{}
 	query := "SELECT count(*) FROM users 1"
+	if cond.Email != "" {
+		query += " AND email = ?"
+		params = append(params, cond.Email)
+	}
 	if cond.Password != "" {
 		query += " AND password = ?"
 		params = append(params, cond.Password)
