@@ -87,7 +87,8 @@ func RegisterHandler(c *gin.Context, app *app.App) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"token": jwtToken,
+		"token":  jwtToken,
+		"userId": userID,
 	})
 }
 
