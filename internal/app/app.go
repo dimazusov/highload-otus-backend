@@ -5,12 +5,15 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/go-redis/redis/v8"
-	"github.com/pkg/errors"
+	_ "github.com/go-sql-driver/mysql"
+
 	"social/internal/cache"
 	"social/internal/config"
 	"social/internal/domain/auth_token"
 	"social/internal/domain/user"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/pkg/errors"
 )
 
 type Domain struct {

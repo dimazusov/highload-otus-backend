@@ -10,7 +10,7 @@ redis:
 db:
   mysql:
     dialect: "mysql"
-    dsn: "mysql://db:db@mysql:3306/highload?serverVersion=5"
+    dsn: "db:db@tcp(mysql:3306)/highload?charset=utf8mb4&serverVersion=5"
     maxConnLifetimeMinute: 3
     maxConn: 10
 
