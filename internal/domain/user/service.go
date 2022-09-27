@@ -50,7 +50,7 @@ func (m service) First(ctx context.Context, cond *User) (b *User, err error) {
 	}
 	cond.Password = hashedPass
 
-	b, err = m.rep.Get(ctx, cond.ID)
+	b, err = m.rep.First(ctx, cond)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (m service) Count(ctx context.Context, cond *User) (uint, error) {
 }
 
 func (m service) getPassHash(password string) (hashedPass string, err error) {
-	hashedPass, err = hasher.New().GetHashFromStruct(hashedPass + salt)
+	hashedPass, err = hasher.New().GetHashFromStruct(password + salt)
 	if err != nil {
 		return "", err
 	}

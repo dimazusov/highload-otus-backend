@@ -100,6 +100,7 @@ func (m *App) initRepositories() (err error) {
 
 func (m *App) initServices() (err error) {
 	m.Domain.User.Service = user.NewService(m.Domain.User.Repository)
+	m.Domain.AuthToken.Service = auth_token.NewService()
 
 	return nil
 }

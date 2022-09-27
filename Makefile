@@ -10,7 +10,10 @@ install-lint-deps:
 lint: install-lint-deps
 	golangci-lint run ./...
 
-migrate:
+goose-install:
+	go install github.com/pressly/goose/v3/cmd/goose@latest
+
+migrate: goose-install
 	cd migrations && goose mysql "root:pass@/highload" up
 
 test-data:

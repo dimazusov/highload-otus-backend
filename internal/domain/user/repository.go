@@ -48,7 +48,7 @@ func (m repository) Get(ctx context.Context, id uint) (u *User, err error) {
 
 func (m repository) First(ctx context.Context, cond *User) (u *User, err error) {
 	params := []interface{}{}
-	query := "SELECT id, email, password, name, surname, age, sex, city, interest FROM users 1"
+	query := "SELECT id, email, password, name, surname, age, sex, city, interest FROM users WHERE 1"
 	if cond.Email != "" {
 		query += " AND email = ?"
 		params = append(params, cond.Email)
@@ -76,7 +76,7 @@ func (m repository) First(ctx context.Context, cond *User) (u *User, err error) 
 
 	u = &User{}
 	err = m.db.QueryRowContext(ctx, query, params...).
-		Scan(&u.ID, &u.Email, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Age, &u.Sex, &u.City, &u.Interest)
+		Scan(&u.ID, &u.Email, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Sex, &u.City, &u.Interest)
 	if err != nil {
 		return nil, err
 	}

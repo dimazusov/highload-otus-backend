@@ -2,11 +2,12 @@ package user
 
 import (
 	"context"
-	"github.com/gin-gonic/gin/binding"
 	"log"
 	"net/http"
 	"social/internal/pkg/pagination"
 	"strconv"
+
+	"github.com/gin-gonic/gin/binding"
 
 	"github.com/gin-gonic/gin"
 	"github.com/minipkg/selection_condition"
@@ -36,7 +37,7 @@ func AuthHandler(c *gin.Context, app *app.App) {
 	u, err := app.Domain.User.Service.First(context.Background(), &cond)
 	if err != nil {
 		if err == apperror.ErrNotFound {
-			c.JSON(http.StatusBadRequest, gin.H{"error": apperror.ErrInternal.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": apperror.ErrNotFound.Error()})
 			return
 		}
 		log.Println(err)
@@ -52,7 +53,8 @@ func AuthHandler(c *gin.Context, app *app.App) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"token": jwtToken,
+		"userId": u.ID,
+		"token":  jwtToken,
 	})
 }
 
