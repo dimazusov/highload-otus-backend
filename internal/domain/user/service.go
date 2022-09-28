@@ -2,9 +2,9 @@ package user
 
 import (
 	"context"
-	"social/internal/pkg/pagination"
 
 	"social/internal/pkg/hasher"
+	"social/internal/pkg/pagination"
 )
 
 const salt = "safadsgasdg"

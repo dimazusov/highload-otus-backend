@@ -137,7 +137,7 @@ func (m repository) Query(ctx context.Context, cond *User, pag *pagination.Pagin
 }
 
 func (m repository) Create(ctx context.Context, u *User) (uint, error) {
-	query := "INSERT INTO (email, password, name, surname, age, sex, city, interest) VALUES (?,?,?,?,?,?,?,?);"
+	query := "INSERT INTO users (email, password, name, surname, age, sex, city, interest) VALUES (?,?,?,?,?,?,?,?);"
 	res, err := m.db.ExecContext(ctx, query, u.Email, u.Password, u.Name, u.Surname, u.Age, u.Sex, u.City, u.Interest)
 	if err != nil {
 		return 0, errors.Wrap(err, "cannot create User")
