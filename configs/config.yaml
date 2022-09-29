@@ -1,16 +1,16 @@
 server:
   http:
     host: "0.0.0.0"
-    port: "8080"
+    port: "80"
 
 redis:
-  address: "localhost:6379"
+  address: "redis:6379"
   password: ""
 
 db:
   mysql:
     dialect: "mysql"
-    dsn: "db:db@tcp(localhost:3306)/highload?charset=utf8mb4"
+    dsn: "db:db@tcp(mysql:3306)/highload?charset=utf8mb4"
     maxConnLifetimeMinute: 3
     maxConn: 10
 
