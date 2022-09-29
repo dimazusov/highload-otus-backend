@@ -7,9 +7,8 @@ import (
 	"social/internal/pkg/pagination"
 	"strconv"
 
-	"github.com/gin-gonic/gin/binding"
-
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/minipkg/selection_condition"
 
 	"social/internal/app"
@@ -160,14 +159,14 @@ func GetUserHandler(c *gin.Context, app *app.App) {
 		return
 	}
 
-	bld, err := app.Domain.User.Service.Get(context.Background(), uint(userID))
+	u, err := app.Domain.User.Service.Get(context.Background(), uint(userID))
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, api_error.New(apperror.ErrInternal))
 		return
 	}
 
-	c.JSON(http.StatusOK, bld)
+	c.JSON(http.StatusOK, u)
 }
 
 // @Summary update user

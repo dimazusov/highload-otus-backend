@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,19 +13,22 @@ import (
 
 func Auth(app *app.App) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token, ok := c.Get("X-Auth-Token")
+		values, ok := c.Request.Header["X-Auth-Token"]
 		if !ok {
-			c.JSON(http.StatusForbidden, gin.H{})
+			c.AbortWithStatus(http.StatusForbidden)
 			return
 		}
-		_, err := app.Domain.AuthToken.Service.Parse(context.Background(), token.(string))
+		if len(values) == 0 {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+		_, err := app.Domain.AuthToken.Service.Parse(context.Background(), values[0])
 		if err != nil {
 			if errors.Is(err, auth_token.ErrWrongToken) {
-				c.JSON(http.StatusForbidden, gin.H{})
+				c.AbortWithStatus(http.StatusForbidden)
 				return
 			}
-			log.Println(err)
-			c.JSON(http.StatusInternalServerError, gin.H{})
+			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 		c.Next()
@@ -35,16 +37,15 @@ func Auth(app *app.App) gin.HandlerFunc {
 
 func Cors(app *app.App) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		log.Println("test")
 		c.Writer.Header().Set("Content-Type", "application/json")
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Max-Age", "86400")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Max")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "X-Auth-Token, Content-Type, Content-Length, Accept-Encoding")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "false")
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(200)
+			return
 		}
 	}
 }

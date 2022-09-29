@@ -35,7 +35,7 @@ func (m repository) Get(ctx context.Context, id uint) (u *User, err error) {
 	query := "SELECT id, email, password, name, surname, age, sex, city, interest FROM users WHERE id = ?"
 
 	err = m.db.QueryRowContext(ctx, query, id).
-		Scan(&u.ID, &u.Email, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Age, &u.Sex, &u.City, &u.Interest)
+		Scan(&u.ID, &u.Email, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Sex, &u.City, &u.Interest)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apperror.ErrNotFound
