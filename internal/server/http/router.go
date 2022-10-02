@@ -16,7 +16,21 @@ func NewGinRouter(app *app.App) *gin.Engine {
 	router := gin.Default()
 
 	frontendGroup := router.Group("/").Use(middleware.Cors(app))
-	frontendGroup.GET("/", func(c *gin.Context) { c.File("web/index.html") })
+	frontendGroup.GET("/", func(c *gin.Context) {
+		//data, err := os.ReadFile("web/index.html")
+		//if err != nil {
+		//	log.Println(err)
+		//	c.AbortWithStatus(http.StatusInternalServerError)
+		//}
+		//
+		//var input io.ReadCloser
+		//input.Read(data)
+		//input.Close()
+		//c.Request.Response.Body = input
+
+		//_, err = c.Request.Response.Write(buf)
+		//log.Println(err)
+	})
 	frontendGroup.StaticFS("/static", http.Dir("web/static"))
 
 	authGroup := router.Group("/api/v1").Use(middleware.Cors(app))
