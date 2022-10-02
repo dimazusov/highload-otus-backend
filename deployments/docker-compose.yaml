@@ -24,7 +24,7 @@ services:
       - mysql
       - redis
     ports:
-      - "8080:8080"
+      - "80:80"
     build:
       dockerfile: ./build/Dockerfile
       context: ..
