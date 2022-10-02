@@ -18,7 +18,7 @@ import (
 // @description social api
 func NewGinRouter(app *app.App) *gin.Engine {
 	router := gin.Default()
-	router.LoadHTMLGlob("web/*.html")
+	router.LoadHTMLGlob("web/*.")
 
 	frontendGroup := router.Group("/").Use(middleware.Cors(app))
 	router.GET("/", func(c *gin.Context) { c.HTML(http.StatusOK, "index.html", gin.H{}) })
