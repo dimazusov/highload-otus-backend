@@ -9,6 +9,7 @@ WORKDIR ${CODE_DIR}
 
 COPY go.mod .
 COPY go.sum .
+COPY web web
 RUN go mod download
 
 COPY . ${CODE_DIR}
