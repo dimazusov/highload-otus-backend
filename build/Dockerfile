@@ -9,7 +9,6 @@ WORKDIR ${CODE_DIR}
 
 COPY go.mod .
 COPY go.sum .
-COPY web web
 RUN go mod download
 
 COPY . ${CODE_DIR}
@@ -32,5 +31,8 @@ COPY --from=build ${TESTGEN_FILE} ${TESTGEN_FILE}
 
 ENV CONFIG_FILE /etc/social/config.yaml
 COPY ./configs/config.yaml ${CONFIG_FILE}
+COPY ./web /opt/social/web
+
+WORKDIR /opt/social
 
 CMD ${SERVER_FILE} -config ${CONFIG_FILE}
