@@ -1,10 +1,14 @@
 package http
 
 import (
+	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"social/internal/app"
 	"social/internal/server/http/handlers/user"
 	"social/internal/server/http/middleware"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,22 +18,24 @@ import (
 // @description social api
 func NewGinRouter(app *app.App) *gin.Engine {
 	router := gin.Default()
+	router.LoadHTMLGlob("web/*.html")
 
 	frontendGroup := router.Group("/").Use(middleware.Cors(app))
-	frontendGroup.GET("/", func(c *gin.Context) {
-		//data, err := os.ReadFile("web/index.html")
-		//if err != nil {
-		//	log.Println(err)
-		//	c.AbortWithStatus(http.StatusInternalServerError)
-		//}
-		//
-		//var input io.ReadCloser
-		//input.Read(data)
-		//input.Close()
-		//c.Request.Response.Body = input
-
-		//_, err = c.Request.Response.Write(buf)
-		//log.Println(err)
+	router.GET("/", func(c *gin.Context) { c.HTML(http.StatusOK, "index.html", gin.H{}) })
+	router.GET("/auth", func(c *gin.Context) { c.HTML(http.StatusOK, "index.html", gin.H{}) })
+	router.GET("/registration", func(c *gin.Context) { c.HTML(http.StatusOK, "index.html", gin.H{}) })
+	router.GET("/manifest.json", func(c *gin.Context) {
+		file, err := os.Open("web/manifest.json")
+		if err != nil {
+			log.Fatal(err)
+		}
+		b, err := ioutil.ReadAll(file)
+		if err != nil {
+			log.Fatal(err)
+		}
+		data := strings.ReplaceAll(string(b), "\n", "")
+		data = strings.ReplaceAll(data, "\\\"", "\"")
+		c.Data(http.StatusOK, "application/json", []byte(data))
 	})
 	frontendGroup.StaticFS("/static", http.Dir("web/static"))
 
