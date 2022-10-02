@@ -20,7 +20,7 @@ func NewGinRouter(app *app.App) *gin.Engine {
 	router := gin.Default()
 	router.LoadHTMLGlob("web/*.html")
 
-	frontendGroup := router.Group("/").Use(middleware.Cors(app))
+	frontendGroup := router.Group("/")
 	router.GET("/", func(c *gin.Context) { c.HTML(http.StatusOK, "index.html", gin.H{}) })
 	router.GET("/auth", func(c *gin.Context) { c.HTML(http.StatusOK, "index.html", gin.H{}) })
 	router.GET("/registration", func(c *gin.Context) { c.HTML(http.StatusOK, "index.html", gin.H{}) })
