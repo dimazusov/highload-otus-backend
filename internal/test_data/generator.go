@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"social/internal/pkg/hasher"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -52,7 +53,7 @@ func newLogger() logger.Interface {
 
 func (m generator) GenerateTestData() (err error) {
 	log.Println("generate buildings")
-	if err := m.generateBuildings(); err != nil {
+	if err := m.generateUsers(); err != nil {
 		return err
 	}
 
@@ -61,7 +62,9 @@ func (m generator) GenerateTestData() (err error) {
 func New() *boolgen {
 	return &boolgen{src: rand.NewSource(time.Now().UnixNano())}
 }
-func (m generator) generateBuildings() error {
+func (m generator) generateUsers() error {
+	// Сгенерировать любым способ 1,000,000 анкет.
+	// Имена и Фамилии должны быть реальными (чтобы учитывать селективность индекса)
 	users := make([]user.User, 0, batchSize)
 	boolGen := newBoolGenerator()
 
@@ -69,15 +72,22 @@ func (m generator) generateBuildings() error {
 	for i := 0; i < countBuildings; i += 5000 {
 		for j := 0; j < batchSize; j++ {
 			age := uint(rand.Intn(maxAge-minAge) + minAge)
+			pass := gofakeit.Password(true, false, true, false, false, 0)
+			hashedPass, err := hasher.New().GetHashFromStruct(pass)
+			if err != nil {
+				return err
+			}
 			users = append(users, user.User{
 				Name:     gofakeit.Name(),
+				Email:    gofakeit.Email(),
+				Password: hashedPass,
 				Age:      age,
 				Sex:      boolGen.Bool(),
 				City:     gofakeit.City(),
 				Interest: gofakeit.Phrase(),
 			})
 
-			err := m.db.Create(&users).Error
+			err = m.db.Create(&users).Error
 			if err != nil {
 				return err
 			}

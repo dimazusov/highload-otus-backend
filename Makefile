@@ -13,15 +13,17 @@ lint: install-lint-deps
 goose-install:
 	go install github.com/pressly/goose/v3/cmd/goose@latest
 
-migrate: goose-install
+migrate-up: goose-install
 	cd migrations && goose mysql "root:pass@/highload" up
+
+migrate-down: goose-install
+	cd migrations && goose mysql "root:pass@/highload" down
 
 test-data:
 	docker-compose -f deployments/docker-compose.yaml exec app sh -c "/opt/social/testdatagen --config=/etc/social/config.yaml"
 
 swagger-init:
 	go get -u github.com/swaggo/swag/cmd/swag
-
 
 swagger: swagger-init
 	swag init -g ./internal/server/http/router.go -o api

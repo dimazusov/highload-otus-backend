@@ -103,7 +103,7 @@ func RegisterHandler(c *gin.Context, app *app.App) {
 // @Param page query int false "page"
 // @Success 200 {object} UsersList
 // @Failure 400 {object} api_error.Error
-// @Failure 500 {object} api_error.Error
+// @Failure 500 {object} api_wwerror.Error
 // @Router /users [get]
 func GetUsersHandler(c *gin.Context, app *app.App) {
 	user := user.User{}
@@ -116,7 +116,7 @@ func GetUsersHandler(c *gin.Context, app *app.App) {
 		PerPage: pagination.DefaultPerPage,
 		Page:    pagination.DefaultPage,
 	}
-	if err := c.ShouldBindWith(&pag, binding.Query); err == nil {
+	if err := c.ShouldBindWith(&pag, binding.Query); err != nil {
 		c.JSON(http.StatusBadRequest, api_error.New(err))
 		return
 	}

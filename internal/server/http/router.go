@@ -48,8 +48,8 @@ func NewGinRouter(app *app.App) *gin.Engine {
 	authGroup.POST("/registration", func(c *gin.Context) { user.RegisterHandler(c, app) })
 
 	apiGroup := router.Group("/api/v1").
-		Use(middleware.Cors(app)).
-		Use(middleware.Auth(app))
+		Use(middleware.Cors(app))
+	//Use(middleware.Auth(app))
 
 	authGroup.OPTIONS("/user/:id", func(c *gin.Context) { c.AbortWithStatus(http.StatusOK) })
 

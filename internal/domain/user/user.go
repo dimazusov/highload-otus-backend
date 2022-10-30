@@ -1,6 +1,6 @@
 package user
 
-const TableName = "user"
+const TableName = "users"
 
 const Female = 0
 const Male = 1
@@ -14,7 +14,7 @@ type User struct {
 	Age      uint   `json:"age" db:"age"`
 	Sex      bool   `json:"sex" db:"sex"`
 	City     string `json:"city" db:"city"`
-	Interest string `json:"interest" db:"interest"`
+	Interest string `json:"interest" db:"interests"`
 }
 
 func (m User) TableName() string {

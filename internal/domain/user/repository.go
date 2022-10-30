@@ -86,7 +86,7 @@ func (m repository) First(ctx context.Context, cond *User) (u *User, err error) 
 
 func (m repository) Query(ctx context.Context, cond *User, pag *pagination.Pagination) (Users []User, err error) {
 	params := []interface{}{}
-	query := "SELECT id, email, password, name, surname, age, sex, city, interest FROM users 1"
+	query := "SELECT id, email, password, name, surname, age, sex, city, interest FROM users WHERE 1"
 	if cond.Email != "" {
 		query += " AND email = ?"
 		params = append(params, cond.Email)
@@ -112,8 +112,7 @@ func (m repository) Query(ctx context.Context, cond *User, pag *pagination.Pagin
 		params = append(params, cond.Interest)
 	}
 
-	query += fmt.Sprintf("OFFSET %d LIMIT %d", pag.GetOffset(), pag.GetLimit())
-	params = append(params, pag.GetOffset(), pag.GetLimit())
+	query += fmt.Sprintf(" LIMIT %d, %d", pag.GetOffset(), pag.GetLimit())
 
 	rows, err := m.db.QueryContext(ctx, query, params...)
 	if err != nil {
@@ -127,7 +126,7 @@ func (m repository) Query(ctx context.Context, cond *User, pag *pagination.Pagin
 	users := []User{}
 	for rows.Next() {
 		u := User{}
-		err = rows.Scan(&u.ID, &u.Email, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Age, &u.Sex, &u.City, &u.Interest)
+		err = rows.Scan(&u.ID, &u.Email, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Sex, &u.City, &u.Interest)
 		if err != nil {
 			return nil, err
 		}
