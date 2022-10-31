@@ -13,7 +13,7 @@ type User struct {
 	Surname  string `json:"surname" db:"surname"`
 	Age      uint   `json:"age" db:"age"`
 	Sex      bool   `json:"sex" db:"sex"`
-	City     string `json:"city" db:"city"`
+	City     string `json:"city" db:"city" form:"city"`
 	Interest string `json:"interest" db:"interests"`
 }
 
