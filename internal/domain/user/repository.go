@@ -130,6 +130,7 @@ func (m repository) Query(ctx context.Context, cond *User, pag *pagination.Pagin
 		if err != nil {
 			return nil, err
 		}
+		users = append(users, u)
 	}
 
 	return users, nil
@@ -168,7 +169,7 @@ func (m repository) Delete(ctx context.Context, id uint) error {
 
 func (m repository) Count(ctx context.Context, cond *User) (uint, error) {
 	params := []interface{}{}
-	query := "SELECT count(*) FROM users 1"
+	query := "SELECT count(*) FROM users WHERE 1"
 	if cond.Email != "" {
 		query += " AND email = ?"
 		params = append(params, cond.Email)

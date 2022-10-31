@@ -58,12 +58,13 @@ func (m service) First(ctx context.Context, cond *User) (b *User, err error) {
 	return b, nil
 }
 
-func (m service) Query(ctx context.Context, cond *User, pag *pagination.Pagination) (Users []User, err error) {
-	if Users, err = m.rep.Query(ctx, cond, pag); err != nil {
+func (m service) Query(ctx context.Context, cond *User, pag *pagination.Pagination) (users []User, err error) {
+	users, err = m.rep.Query(ctx, cond, pag)
+	if err != nil {
 		return nil, err
 	}
 
-	return Users, nil
+	return users, nil
 }
 
 func (m service) Create(ctx context.Context, u *User) (uint, error) {
