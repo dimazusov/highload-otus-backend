@@ -37,7 +37,7 @@ func (m *server) Start(ctx context.Context) error {
 	router := NewGinRouter(m.app)
 
 	m.srv = &http.Server{}
-	m.srv.Addr = m.cfg.Server.HTTP.Host + ":" + m.cfg.Server.HTTP.Port
+	m.srv.Addr = m.cfg.Server.Http.Host + ":" + m.cfg.Server.Http.Port
 	m.srv.Handler = router
 
 	fmt.Println("listen: ", m.srv.Addr)

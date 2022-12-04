@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math/rand"
 	"social/internal/pkg/pagination"
 
 	"github.com/pkg/errors"
@@ -22,11 +23,15 @@ type Repository interface {
 }
 
 type repository struct {
-	db *sql.DB
+	readerNodes []*sql.DB
+	writerNodes []*sql.DB
 }
 
-func NewRepository(db *sql.DB) Repository {
-	return &repository{db: db}
+func NewRepository(readerNodes, writerNodes []*sql.DB) Repository {
+	return &repository{
+		readerNodes: readerNodes,
+		writerNodes: writerNodes,
+	}
 }
 
 func (m repository) Get(ctx context.Context, id uint) (u *User, err error) {
@@ -34,7 +39,7 @@ func (m repository) Get(ctx context.Context, id uint) (u *User, err error) {
 
 	query := "SELECT id, email, password, name, surname, age, sex, city, interest FROM users WHERE id = ?"
 
-	err = m.db.QueryRowContext(ctx, query, id).
+	err = getRandomNode(m.readerNodes).QueryRowContext(ctx, query, id).
 		Scan(&u.ID, &u.Email, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Sex, &u.City, &u.Interest)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -75,7 +80,7 @@ func (m repository) First(ctx context.Context, cond *User) (u *User, err error) 
 	}
 
 	u = &User{}
-	err = m.db.QueryRowContext(ctx, query, params...).
+	err = getRandomNode(m.readerNodes).QueryRowContext(ctx, query, params...).
 		Scan(&u.ID, &u.Email, &u.Password, &u.Name, &u.Surname, &u.Age, &u.Sex, &u.City, &u.Interest)
 	if err != nil {
 		return nil, err
@@ -114,7 +119,7 @@ func (m repository) Query(ctx context.Context, cond *User, pag *pagination.Pagin
 
 	query += fmt.Sprintf(" LIMIT %d, %d", pag.GetOffset(), pag.GetLimit())
 
-	rows, err := m.db.QueryContext(ctx, query, params...)
+	rows, err := getRandomNode(m.readerNodes).QueryContext(ctx, query, params...)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apperror.ErrNotFound
@@ -138,7 +143,7 @@ func (m repository) Query(ctx context.Context, cond *User, pag *pagination.Pagin
 
 func (m repository) Create(ctx context.Context, u *User) (uint, error) {
 	query := "INSERT INTO users (email, password, name, surname, age, sex, city, interest) VALUES (?,?,?,?,?,?,?,?);"
-	res, err := m.db.ExecContext(ctx, query, u.Email, u.Password, u.Name, u.Surname, u.Age, u.Sex, u.City, u.Interest)
+	res, err := getRandomNode(m.writerNodes).ExecContext(ctx, query, u.Email, u.Password, u.Name, u.Surname, u.Age, u.Sex, u.City, u.Interest)
 	if err != nil {
 		return 0, errors.Wrap(err, "cannot create User")
 	}
@@ -151,7 +156,7 @@ func (m repository) Create(ctx context.Context, u *User) (uint, error) {
 
 func (m repository) Update(ctx context.Context, u *User) error {
 	query := "UPDATE users SET email=?,password=?, name=?, surname=?, age=?, sex=?, city=?, interest=? WHERE id =? VALUES (?,?,?,?,?,?,?,?,?);"
-	_, err := m.db.ExecContext(ctx, query, u.Email, u.Password, u.Name, u.Surname, u.Age, u.Sex, u.City, u.Interest, u.ID)
+	_, err := getRandomNode(m.writerNodes).ExecContext(ctx, query, u.Email, u.Password, u.Name, u.Surname, u.Age, u.Sex, u.City, u.Interest, u.ID)
 	if err != nil {
 		return errors.Wrap(err, "cannot update user")
 	}
@@ -160,7 +165,7 @@ func (m repository) Update(ctx context.Context, u *User) error {
 
 func (m repository) Delete(ctx context.Context, id uint) error {
 	query := "DELETE FROM users WHERE id = ?"
-	_, err := m.db.ExecContext(ctx, query, id)
+	_, err := getRandomNode(m.writerNodes).ExecContext(ctx, query, id)
 	if err != nil {
 		return errors.Wrap(err, "cannot delete user")
 	}
@@ -196,10 +201,14 @@ func (m repository) Count(ctx context.Context, cond *User) (uint, error) {
 	}
 
 	count := 0
-	err := m.db.QueryRowContext(ctx, query, params...).Scan(&count)
+	err := getRandomNode(m.readerNodes).QueryRowContext(ctx, query, params...).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
 
 	return uint(count), nil
+}
+
+func getRandomNode(nodes []*sql.DB) *sql.DB {
+	return nodes[rand.Intn(len(nodes))]
 }
